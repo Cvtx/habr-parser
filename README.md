@@ -23,7 +23,7 @@ usage: habr-parser -u [URLs] [OPTIONS]
 ## Examples
 
 ```shell
-$ habr-parser -u https://habr.com/en/hub/git/page3/
-$ habr-parser -u https://habr.com/en/all/ -p 3
+$ habr-parser -u https://habr.com/en/flows/develop/page2/
+$ habr-parser -u https://habr.com/en/all/page1/ -p 3
 $ habr-parser -u https://habr.com/en/all/page5/ https://habr.com/en/articles/127197/
 ```
