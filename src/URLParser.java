@@ -1,6 +1,9 @@
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Can determine which links are valid for parsing, also can create mock urls based on some data and extract information from urls.
+ */
 public class URLParser {
     public static int getUrlPageNumber(String url) throws RuntimeException {
         return getIntFromRegexGroup(habrPageRegex, url, 2);

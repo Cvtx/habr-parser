@@ -4,6 +4,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+/**
+ * SQLite database support.
+ */
 public class SQLiteDB {
     public static Connection connection;
 
@@ -49,4 +52,3 @@ public class SQLiteDB {
         connection.close();
     }
 }
-

@@ -2,6 +2,9 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+/**
+ * Set of all task that parser should complete.
+ */
 public class ParserJob {
     private LinkedHashSet<ParserTask> _tasks = new LinkedHashSet<>();
 

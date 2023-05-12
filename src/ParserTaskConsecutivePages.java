@@ -1,6 +1,10 @@
-public class ParserTaskBatchPages extends ParserTaskPage{
+/**
+ * Represents parser task for parsing all articles on the all pages.
+ */
+public class ParserTaskConsecutivePages extends ParserTaskPage{
     private int _pagesAmount;
-    public ParserTaskBatchPages(String url, int pagesAmount) throws InstantiationException {
+
+    public ParserTaskConsecutivePages(String url, int pagesAmount) throws InstantiationException {
         super(url);
         if (pagesAmount < 0){
             throw new InstantiationException("Pages amount should be a positive number");

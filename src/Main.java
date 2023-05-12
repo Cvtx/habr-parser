@@ -23,6 +23,7 @@ public class Main {
         } catch (SQLException e) {
         }
     }
+
     private static Options getOptions() {
         Options options = new Options();
         Option help = Option.builder("h").longOpt("help")
@@ -63,6 +64,51 @@ public class Main {
         options.addOption(pagesAmount);
         return options;
     }
+
+    private static void printHelp(HelpFormatter helper, Options options){
+        helper.printHelp("habr-parser -u [URLs] [OPTIONS]", options);
+    }
+
+    private static void checkForInvalidUrls(List<String> invalidUrls, boolean verboseErrors) throws ParseException {
+        if (!invalidUrls.isEmpty()) {
+            System.out.println(String.format("Some (%d) of the provided URLs are invalid, therefore they can't be parsed.", invalidUrls.size()));
+            if (verboseErrors) {
+                System.out.println("Invalid URLs are:");
+                invalidUrls.parallelStream().forEach(System.out::println);
+            }
+            else {
+                System.out.println("Use -ve to output invalid URLs.");
+            }
+            throw new ParseException("Invalid URLs provided.");
+        }
+    }
+
+    private static LinkedList<ParserTask> makeParserTasksFromUrls(List<String> validUrls){
+        LinkedList<ParserTask> tasks = validUrls.parallelStream()
+                .map(str -> {
+                    try {
+                        if (URLParser.isArticleUrl(str)) {
+                            return new ParserTaskArticle(str);
+                        } else if (URLParser.isPageUrl(str)) {
+                            return new ParserTaskPage(str);
+                        } else {
+                            throw new RuntimeException("Parsing of this kind URL is not implemented. URL: " + str);
+                        }
+                    } catch (InstantiationException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedList::new));
+        return tasks;
+    }
+
+    /**
+     * Try to construct ParserJob to run.
+     * @param options
+     * @param args
+     * @return ParserJob based on passed options.
+     */
     private static ParserJob parseArgs(Options options, String[] args){
         CommandLine cmd;
         CommandLineParser parser = new BasicParser();
@@ -72,55 +118,32 @@ public class Main {
         try {
             cmd = parser.parse(options, args);
             boolean verboseErrors = false;
-            if(cmd.hasOption("h")) { helper.printHelp("habr-parser -u [URLs] [OPTIONS]", options); System.exit(0); }
+            if(cmd.hasOption("h")) { printHelp(helper, options); System.exit(0); }
             if(cmd.hasOption("ve")) { verboseErrors = true; }
             if(cmd.hasOption("f")) { csvFilename = cmd.getOptionValue("filename");}
             if (cmd.hasOption("l")) {
-                String lang = cmd.getOptionValue("language");
-                config.setLanguage(lang);
+                String language = cmd.getOptionValue("language");
+                config.setLanguage(language);
             }
             if (cmd.hasOption("u")) {
                 var urls = cmd.getOptionValues("urls");
+                // Split valid and invalid urls
                 Map<Boolean, List<String>> partitionedUrl = Arrays.stream(urls)
                         .collect(Collectors.partitioningBy(URLParser::isValidUrl));
 
+                // Check if we got some invalid urls
                 List<String> invalidUrls = partitionedUrl.get(false);
-                if (!invalidUrls.isEmpty()) {
-                    System.out.println(String.format("Some (%d) of the provided URLs are invalid, therefore they can't be parsed.", invalidUrls.size()));
-                    if (verboseErrors) {
-                        System.out.println("Invalid URLs are:");
-                        invalidUrls.stream().forEach(System.out::println);
-                    }
-                    else {
-                        System.out.println("Use -ve to output invalid URLs.");
-                    }
-                    throw new ParseException("Invalid URLs provided.");
-                }
+                checkForInvalidUrls(invalidUrls, verboseErrors);
 
                 List<String> validUrls = partitionedUrl.get(true);
-
-                // Replace https://habr.com/en/hub/git/ -> https://habr.com/en/hub/git/page1/
-                validUrls.stream()
+                // Edge case: Replace main pages like https://habr.com/en/hub/git/ -> to first pages like https://habr.com/en/hub/git/page1/
+                // TODO: This should be handled by ParserTaskPage
+                validUrls.parallelStream()
                         .filter(url -> URLParser.isMainPageUrl(url))
                         .forEach(url -> {validUrls.set(validUrls.indexOf(url), url + "page1/");});
 
-                LinkedList<ParserTask> validParserTasks = validUrls.stream()
-                        .map(str -> {
-                            try {
-                                if (URLParser.isArticleUrl(str)) {
-                                    return new ParserTask(str);
-                                } else if (URLParser.isPageUrl(str)) {
-                                    return new ParserTaskPage(str);
-                                } else {
-                                    throw new RuntimeException("Parsing of this kind URL is not implemented. URL: " + str);
-                                }
-                            } catch (InstantiationException e) {
-                                throw new RuntimeException(e);
-                            }
-                        })
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toCollection(LinkedList::new));
-
+                // Convert valid urls into ParserTasks
+                LinkedList<ParserTask> validParserTasks = makeParserTasksFromUrls(validUrls);
                 job.addTasks(validParserTasks);
             }
             if (cmd.hasOption("p")){
@@ -132,13 +155,14 @@ public class Main {
                         String pagesAmountStr = cmd.getOptionValue("pages");
                         int pagesAmount = Integer.parseInt(pagesAmountStr);
                         job.reset();
-                        job.addTask(new ParserTaskBatchPages(url, pagesAmount));
+                        job.addTask(new ParserTaskConsecutivePages(url, pagesAmount));
                     }
                     else {throw new ParseException("Option -p provided but specified URL is not a page URL.");}
                 } else {throw new ParseException("Option -p should not be specified if more than one URL is provided.");}
             }
             if (cmd.getOptions().length == 0){
-                helper.printHelp("habr-parser -u [URLs] [OPTIONS]", options); System.exit(0);
+                printHelp(helper, options);
+                System.exit(0);
             }
         } catch (ParseException e) {
             System.out.println("[Argument Error] " + e.getMessage());
@@ -150,4 +174,3 @@ public class Main {
         return job;
     }
 }
-

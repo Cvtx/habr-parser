@@ -5,6 +5,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+/**
+ * Writes articles in .csv file.
+ */
 public class CSVWriter {
     static void writeCSV(String filename, LinkedList<Article> articles){
         File csvFile = new File(filename);

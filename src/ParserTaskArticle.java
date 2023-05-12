@@ -1,3 +1,6 @@
+/**
+ * Represents parser task for parsing single article.
+ */
 public class ParserTaskArticle extends  ParserTask{
     public ParserTaskArticle(String url) throws InstantiationException {
         super(url);

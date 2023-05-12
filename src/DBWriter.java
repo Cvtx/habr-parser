@@ -2,6 +2,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedList;
 
+/**
+ * Writes articles in SQLite database.
+ */
 public class DBWriter implements AutoCloseable {
 
     public DBWriter(){
@@ -19,6 +22,7 @@ public class DBWriter implements AutoCloseable {
             // most likely error about table is already created so ignore it
         }
     }
+
     public void writeDB(LinkedList<Article> articles) throws SQLException{
         for (Article a: articles){
             // TODO: Better do batch insert
