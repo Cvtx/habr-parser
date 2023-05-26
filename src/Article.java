@@ -7,6 +7,10 @@ public class Article {
     private String url;
     private String quoteText;
     int id;
+    private String tags;
+    private String date;
+    private String dateTime;
+    private String views;
 
     Article(int id, String title, String author, String url, String quoteText){
         setID(id);
@@ -46,5 +50,37 @@ public class Article {
 
     public void setURl(String url) {
         this.url = url;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public String getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(String dateTime) {
+        this.dateTime = dateTime;
+    }
+
+    public String getViews() {
+        return views;
+    }
+
+    public void setViews(String views) {
+        this.views = views;
     }
 }

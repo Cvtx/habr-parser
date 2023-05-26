@@ -18,6 +18,9 @@ public class CSVWriter {
                 List<String> row = new ArrayList<>();
                 row.add("\"" + article.getTitle() + "\"");
                 row.add("\"" + article.getAuthor() + "\"");
+                row.add("\"" + article.getViews() + "\"");
+                row.add("\"" + article.getDate() + "\"");
+                row.add("\"" + article.getTags() + "\"");
                 row.add("\"" + article.getURL() + "\"");
                 printWriter.println(String.join(",", row));
             }

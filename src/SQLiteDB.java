@@ -24,6 +24,10 @@ public class SQLiteDB {
                 "\t\"Author\"\tTEXT NOT NULL,\n" +
                 "\t\"URL\"\tTEXT NOT NULL,\n" +
                 "\t\"Text\"\tTEXT,\n" +
+                "\t\"Tags\"\tTEXT,\n" +
+                "\t\"Date\"\tTEXT,\n" +
+                "\t\"DateTime\"\tTEXT,\n" +
+                "\t\"Views\"\tTEXT,\n" +
                 "\tPRIMARY KEY(\"ID\" AUTOINCREMENT)\n" +
                 ")");
         statement.close();

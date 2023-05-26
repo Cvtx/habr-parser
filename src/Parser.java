@@ -1,5 +1,7 @@
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -105,11 +107,34 @@ public class Parser {
     private static Article parseArticle(ParserTaskArticle task){
         DocumentLoader documentLoader = new DocumentLoader();
         Document d = documentLoader.getDoc(task.getUrl());
-        String authorUsername = d.select("a.tm-user-info__username").first().text();
-        String title = d.select("h1.tm-title").first().text();
-        String articleText = d.select("div.article-formatted-body > div").first().text();
+        String authorUsername = getTextFromElement(d.select("a.tm-user-info__username").first());
+        String title = getTextFromElement(d.select("h1.tm-title").first());
+        String articleText = getTextFromElement(d.select("div.article-formatted-body").first());
+        LinkedList<String> tags = getTextFromElements(d.select("div.tm-article-snippet__hubs > span.tm-article-snippet__hubs-item"));
+        String tagsStr = tags.stream().collect(Collectors.joining(","));
+        String views = getTextFromElement(d.select("span.tm-icon-counter__value").first());
+        String time = getTextFromElement(d.select("span.tm-article-datetime-published > time").first());
+        String timeDatetime = d.select("span.tm-article-datetime-published > time").first().attr("datetime");;
         int id = URLParser.getUrlID(task.getUrl());
-        return new Article(id, title, authorUsername, task.getUrl(), articleText);
+        Article a = new Article(id, title, authorUsername, task.getUrl(), articleText);
+        a.setTags(tagsStr);
+        a.setDate(time);
+        a.setDateTime(timeDatetime);
+        a.setViews(views);
+        return a;
+    }
+
+    /**
+     Retrieves the text from a collection of elements and returns them as a LinkedList.
+     @param e The Elements collection from which to extract the text.
+     @return A LinkedList containing the text extracted from the elements.
+     */
+    private static LinkedList<String>  getTextFromElements(Elements e){
+        LinkedList<String> texts = e.parallelStream()
+                .map(str -> {return getTextFromElement(str);})
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedList::new));
+        return texts;
     }
 
     /**
@@ -153,10 +178,19 @@ public class Parser {
         return articles;
     }
 
+    /**
+     Halts the execution for a specified duration based on the provided ParserConfig.
+     @param config The ParserConfig object containing the halt time configuration.
+     */
     private static void halt(ParserConfig config){
         sleep(config.getHaltTime());
     }
 
+    /**
+     Pauses the execution of the current thread for a specified number of milliseconds.
+     @param milliseconds The duration in milliseconds for which the thread should sleep.
+     @throws RuntimeException if the thread sleep is interrupted.
+     */
     private static void sleep(int milliseconds){
         try {
             Thread.sleep(milliseconds);
@@ -165,6 +199,11 @@ public class Parser {
         }
     }
 
+    /**
+     Retrieves the total number of articles in a given ParserJob.
+     @param job The ParserJob containing the tasks from which to extract the article count.
+     @return The total number of articles found in the ParserJob.
+     */
     public static long getArticlesAmountInJob(ParserJob job){
         var parserTaskSet = job.getTasks();
         return getArticlesAmountInTaskSet(parserTaskSet);
@@ -187,6 +226,13 @@ public class Parser {
                 .mapToInt(task -> ((ParserTaskConsecutivePages)task).getPagesAmount() + 1)
                 .sum();
         return numArticles + numPages * articlesOnPage + numPagesBatches * articlesOnPage;
+    }
+
+    private static String getTextFromElement(Element e){
+        if (e != null){
+            return e.text();
+        }
+        return "";
     }
 
     private static String baseUrl = "https://habr.com";
