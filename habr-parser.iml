@@ -12,5 +12,6 @@
     <orderEntry type="library" name="jsoup" level="project" />
     <orderEntry type="library" name="commons.cli" level="project" />
     <orderEntry type="library" name="xerial.sqlite.jdbc" level="project" />
+    <orderEntry type="library" name="me.xdrop.fuzzywuzzy" level="project" />
   </component>
 </module>

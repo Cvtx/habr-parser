@@ -10,7 +10,7 @@ import java.sql.Statement;
 public class SQLiteDB {
     public static Connection connection;
 
-    public static void conn() throws ClassNotFoundException, SQLException {
+    public static void connect() throws ClassNotFoundException, SQLException {
         connection = null;
         Class.forName("org.sqlite.JDBC");
         connection = DriverManager.getConnection("jdbc:sqlite:articles.db");
@@ -34,9 +34,7 @@ public class SQLiteDB {
     }
 
     public static void printDB() throws SQLException {
-        Statement statement = connection.createStatement();
-        ResultSet resSet = statement.executeQuery("SELECT * FROM 'Articles'");
-
+        ResultSet resSet = readDB();
         while(resSet.next())
         {
             int id = resSet.getInt("ID");
@@ -50,6 +48,12 @@ public class SQLiteDB {
             System.out.println( "text = " + text );
             System.out.println();
         }
+    }
+
+    public static ResultSet readDB() throws SQLException {
+        Statement statement = connection.createStatement();
+        ResultSet resSet = statement.executeQuery("SELECT * FROM 'Articles'");
+        return resSet;
     }
 
     public static void closeDB() throws SQLException {

@@ -83,4 +83,16 @@ public class Article {
     public void setViews(String views) {
         this.views = views;
     }
+
+    @Override
+    public String toString() {
+        return "Article{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", author='" + author + '\'' +
+                ", url='" + url + '\'' +
+                ", tags='" + tags + '\'' +
+                ", date='" + dateTime + '\'' +
+                '}';
+    }
 }

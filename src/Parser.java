@@ -28,7 +28,7 @@ public class Parser {
         articlesParsed = 0;
         Set<ParserTask> tasks = job.getTasks();
         long articlesAmount = Parser.getArticlesAmountInTaskSet(tasks);
-        System.out.println(String.format("Downloading %d articles.", articlesAmount));
+        System.out.printf("Downloading %d articles.%n", articlesAmount);
 
         tasks.stream()
             .forEach(task -> {
@@ -52,7 +52,7 @@ public class Parser {
                 if (articlesParsed % articlesOnPage == 0 || articlesParsed == articlesAmount){
                     System.out.print("\033[H\033[2J");
                     System.out.flush();
-                    System.out.println(String.format("Downloaded [%d / %d] articles.", articlesParsed, articlesAmount));
+                    System.out.printf("Downloaded [%d / %d] articles.%n", articlesParsed, articlesAmount);
                     if (articlesParsed < articlesAmount) {
                         halt(_config);
                     }
@@ -88,10 +88,10 @@ public class Parser {
         int startUrlPageNumber = URLParser.getUrlPageNumber(task.getUrl());
         String dir = URLParser.getUrlDir(task.getUrl());
         LinkedList<Article> articles = new LinkedList<>();
-        System.out.println(String.format("Pages to download: %d ", pagesToDownload + 1));
+        System.out.printf("Pages to download: %d %n", pagesToDownload + 1);
         for (int pageNumber = startUrlPageNumber; pageNumber <= startUrlPageNumber + pagesToDownload; pageNumber++) {
             String pageUrl = URLParser.makeUrlFromPageNumber(config.getLanguage(), dir, pageNumber);
-            System.out.println(String.format("Downloading from %s", pageUrl));
+            System.out.printf("Downloading from %s%n", pageUrl);
             ParserTaskPage pageTask = new ParserTaskPage(pageUrl);
             articles.addAll(parsePage(pageTask));
             halt(config);
@@ -114,7 +114,11 @@ public class Parser {
         String tagsStr = tags.stream().collect(Collectors.joining(","));
         String views = getTextFromElement(d.select("span.tm-icon-counter__value").first());
         String time = getTextFromElement(d.select("span.tm-article-datetime-published > time").first());
-        String timeDatetime = d.select("span.tm-article-datetime-published > time").first().attr("datetime");;
+        Element timeTag = d.select("span.tm-article-datetime-published > time").first();
+        String timeDatetime = null;
+        if (timeTag != null) {
+            timeDatetime = timeTag.attr("datetime");
+        }
         int id = URLParser.getUrlID(task.getUrl());
         Article a = new Article(id, title, authorUsername, task.getUrl(), articleText);
         a.setTags(tagsStr);
@@ -235,7 +239,7 @@ public class Parser {
         return "";
     }
 
-    private static String baseUrl = "https://habr.com";
+    private static final String baseUrl = "https://habr.com";
     private static final int articlesOnPage = 20;
     private LinkedList<Article> articles = new LinkedList<>();
     private long articlesParsed = 0;

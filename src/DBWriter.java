@@ -9,7 +9,7 @@ public class DBWriter implements AutoCloseable {
 
     public DBWriter(){
         try {
-            SQLiteDB.conn();
+            SQLiteDB.connect();
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         } catch (SQLException e) {
