@@ -1,6 +1,11 @@
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import org.jsoup.nodes.Document;
@@ -87,16 +92,31 @@ public class Parser {
         int pagesToDownload = task.getPagesAmount();
         int startUrlPageNumber = URLParser.getUrlPageNumber(task.getUrl());
         String dir = URLParser.getUrlDir(task.getUrl());
-        LinkedList<Article> articles = new LinkedList<>();
+        ThreadSafeLinkedList<Article> articles = new ThreadSafeLinkedList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(3);
+        Collection<Future<?>> tasks = new LinkedList<Future<?>>();
         System.out.printf("Pages to download: %d %n", pagesToDownload + 1);
         for (int pageNumber = startUrlPageNumber; pageNumber <= startUrlPageNumber + pagesToDownload; pageNumber++) {
             String pageUrl = URLParser.makeUrlFromPageNumber(config.getLanguage(), dir, pageNumber);
             System.out.printf("Downloading from %s%n", pageUrl);
             ParserTaskPage pageTask = new ParserTaskPage(pageUrl);
-            articles.addAll(parsePage(pageTask));
-            halt(config);
+            Runnable runnableTask = new ExampleRunnableTask(articles, pageTask);
+            tasks.add(executor.submit(runnableTask));
         }
-        return articles;
+
+        // Same as Thread.join(). I know that ExecutorService shouldn't be used like that.
+        for (Future<?> currTask : tasks) {
+            try {
+                currTask.get();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        executor.shutdown();
+        return articles.get();
     }
 
     /**
@@ -115,7 +135,7 @@ public class Parser {
         String views = getTextFromElement(d.select("span.tm-icon-counter__value").first());
         String time = getTextFromElement(d.select("span.tm-article-datetime-published > time").first());
         Element timeTag = d.select("span.tm-article-datetime-published > time").first();
-        String timeDatetime = null;
+        String timeDatetime = "";
         if (timeTag != null) {
             timeDatetime = timeTag.attr("datetime");
         }
